@@ -27,8 +27,17 @@ mapOptional ::
   (a -> b)
   -> Optional a
   -> Optional b
-mapOptional =
+mapOptional _ Empty = Empty
+mapOptional function (Full a) = Full(function a)
+
+{-
+mapOptional function optional = 
+  case optional of 
+    Full a -> Full (function a)
+    Empty -> Empty
+
   error "todo: Course.Optional#mapOptional"
+-} 
 
 -- | Bind the given function on the possible value.
 --
@@ -44,8 +53,9 @@ bindOptional ::
   (a -> Optional b)
   -> Optional a
   -> Optional b
-bindOptional =
-  error "todo: Course.Optional#bindOptional"
+
+bindOptional _ Empty = Empty
+bindOptional function (Full a) = function a
 
 -- | Return the possible value if it exists; otherwise, the second argument.
 --
@@ -58,8 +68,9 @@ bindOptional =
   Optional a
   -> a
   -> a
-(??) =
-  error "todo: Course.Optional#(??)"
+(??) (Full a) _ = a
+(??) Empty b = b
+
 
 -- | Try the first optional for a value. If it has a value, use it; otherwise,
 -- use the second value.
@@ -75,12 +86,13 @@ bindOptional =
 --
 -- >>> Empty <+> Empty
 -- Empty
+-- Putting parenthesis() around an infix operator converts it into a prefix function
 (<+>) ::
   Optional a
   -> Optional a
   -> Optional a
-(<+>) =
-  error "todo: Course.Optional#(<+>)"  
+(<+>) Empty full = full
+(<+>) full@(Full _) _ = full
 
 applyOptional :: Optional (a -> b) -> Optional a -> Optional b
 applyOptional f a = bindOptional (\f' -> mapOptional f' a) f
@@ -91,6 +103,7 @@ twiceOptional f = applyOptional . mapOptional f
 contains :: Eq a => a -> Optional a -> Bool
 contains _ Empty = False
 contains a (Full z) = a == z
+-- Note overlapping patterns
 
 instance P.Functor Optional where
   fmap =

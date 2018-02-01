@@ -76,35 +76,60 @@ the contents of c
 
 -}
 
+-- syntax is free 
+
 -- /Tip:/ use @getArgs@ and @run@
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
+  -- getArgs >>= \s -> 
+  --   case s of
+  --     Nil -> putStrLn "No args"
+  --     h:._ -> run h
+
+  do 
+    arg <- getArgs
+    case arg of
+      Nil -> putStrLn "No args"
+      h :. _ -> run h
 
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@ and @printFiles@.
 run ::
   FilePath
   -> IO ()
-run =
-  error "todo: Course.FileIO#run"
+run fp =
+  do
+    c <- readFile fp
+    q <- getFiles (lines c)
+    printFiles q
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo: Course.FileIO#getFiles"
+-- getFiles list = sequence (getFile <$> list)
+-- getFiles = sequence . ((<$>) getFile )
+getFiles = sequence . (getFile <$>)
+  
+
+
+  -- sequence ::
+  -- Applicative f =>
+  -- List (f a)
+  -- -> f (List a)
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo: Course.FileIO#getFile"
+getFile filePath =
+  -- lift2 (<$>) (,) readFile
+  do
+    content <- readFile filePath
+    return (filePath, content)
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
@@ -112,7 +137,11 @@ printFiles ::
   List (FilePath, Chars)
   -> IO ()
 printFiles =
-  error "todo: Course.FileIO#printFiles"
+  -- \list -> void (sequence ((uncurry printFile) <$> list))
+  -- \list -> void (sequence (<$>(uncurry printFile) list))
+  void . sequence . (<$>) (uncurry printFile)
+
+-- sequence . (<$>) is traverse
 
 -- Given the file name, and file contents, print them.
 -- Use @putStrLn@.
@@ -120,5 +149,7 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
+printFile name content =
+  do 
+    putStrLn ("=========== " ++ name)
+    putStrLn content

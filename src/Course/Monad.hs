@@ -49,7 +49,7 @@ instance Monad List where
     -> List a
     -> List b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance List"
+    flatMap
 
 -- | Binds a function on an Optional.
 --
@@ -61,20 +61,20 @@ instance Monad Optional where
     -> Optional a
     -> Optional b
   (=<<) =
-    error "todo: Course.Monad (=<<)#instance Optional"
+    bindOptional
 
 -- | Binds a function on the reader ((->) t).
 --
 -- >>> ((*) =<< (+10)) 7
 -- 119
+-- Reader Monad
 instance Monad ((->) t) where
   (=<<) ::
-    (a -> ((->) t b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ((->) t)"
-
+    (a -> (t -> b))
+    -> (t -> a)
+    -> (t -> b)
+  (=<<) a2t2b t2a t = a2t2b(t2a t)(t)
+    
 -- | Witness that all things with (=<<) and (<$>) also have (<*>).
 --
 -- >>> ExactlyOne (+10) <**> ExactlyOne 8
@@ -109,10 +109,9 @@ instance Monad ((->) t) where
 (<**>) ::
   Monad f =>
   f (a -> b)
-  -> f a
-  -> f b
-(<**>) =
-  error "todo: Course.Monad#(<**>)"
+  -> f a -> f b
+(<**>) = (<*>)
+  
 
 infixl 4 <**>
 
@@ -134,7 +133,7 @@ join ::
   f (f a)
   -> f a
 join =
-  error "todo: Course.Monad#join"
+  (=<<) id
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -148,7 +147,7 @@ join =
   -> (a -> f b)
   -> f b
 (>>=) =
-  error "todo: Course.Monad#(>>=)"
+  flip (=<<)
 
 infixl 1 >>=
 
@@ -161,10 +160,14 @@ infixl 1 >>=
   Monad f =>
   (b -> f c)
   -> (a -> f b)
-  -> a
+  -> a 
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+(<=<) b2fc a2fb a = (=<<) b2fc (a2fb a)
+
+-- (=<<) ::
+--     (a -> f b)
+--     -> f a
+--     -> f b
 
 infixr 1 <=<
 
